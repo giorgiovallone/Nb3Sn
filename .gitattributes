@@ -1,0 +1,4 @@
+# Reclassify APDL Scripts and Macros - for GitHub
+# APL / APDL / ...
+*.mac linguist-language=APL
+*.inp linguist-language=APL

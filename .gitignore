@@ -1,0 +1,9 @@
+# Ignored Every File
+/*
+
+# Exceptions
+!*.md
+!*.inp
+!*.mac
+!*.m
+!*.git*

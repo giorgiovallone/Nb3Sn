@@ -1,0 +1,298 @@
+! --------------------------------------------------------------------- !
+! Function BareCableMacro.mac. Runs with:                               !
+! BareCableMacro,t_cable,w_cable,Ns,dstrand,beta_t,r_core,cusc_ratio    !
+! Creates a bare cable respecting the parameters listed.                !
+! G. Vallone, 2020                                                      !
+! --------------------------------------------------------------------- !
+! Assign Arguments / Geometric Parameters
+t_cable = arg1      ! Cable Thickness
+w_cable = arg2      ! Cable Width
+Ns = arg3           ! Number of Strands
+dstrand = arg4      ! Strand Diameter
+beta_t = arg5       ! Cable Twist Angle
+r_core = arg6       ! Radius of the copper 'core' (~gamma in IEEE)
+cusc_ratio = arg7   ! Inverse of Copper to non-copper ratio
+! Materials Definitions Needed
+! mat_nb  - Nb3Sn
+! mat_cu  - Copper
+! mat_res - Epoxy Matrix
+! --------------------------------------------------------------!
+cmsel,none
+alls,below,area
+
+! - Create One Cable
+! Geometry
+Ac = t_cable*w_cable                                ! Cable Area
+eta_f = (Ns*pi*(dstrand/2)**2)/(Ac*cos(beta_t))     ! Filling Factor
+ts = t_cable/2                                      ! Thickness Octagon
+ws = 2*w_cable/Ns                                   ! Width Octagon
+es = sqrt((ws*ts-Ac*eta_f/Ns)/2)                    ! Epoxy Side
+
+csys,0
+! Draw One Octagon
+k,,es,0
+k1 = _return
+k,,ws-es,0
+k2 = _return
+k,,ws,es
+k3 = _return
+k,,ws,ts-es
+k4 = _return
+k,,ws-es,ts
+k5 = _return
+k,,es,ts
+k6 = _return
+k,,0,ts-es
+k7 = _return
+k,,0,es
+k8 = _return
+
+l,k1,k2
+l,k2,k3
+l,k3,k4
+l,k4,k5
+l,k5,k6
+l,k6,k7
+l,k7,k8
+l,k8,k1
+
+a,k1,k2,k3,k4,k5,k6,k7,k8
+
+! Epoxy
+k,,0,0
+k11 = _return
+k,,ws/2,0
+k12 = _return
+k,,ws/2,ts/2
+k13 = _return
+k,,0,ts/2
+k14 = _return
+a,k11,k12,k13,k14
+
+k,,ws,0
+k15 = _return
+k,,ws,ts/2
+k16 = _return
+! k,17,ws/2,ts/2
+a,k12,k15,k16,k13
+
+k,,ws/2,ts
+k18 = _return
+k,,0,ts
+k19 = _return
+a,k11,k12,k18,k19
+
+k,,ws,ts
+k20 = _return
+a,k13,k16,k20,k18
+
+! --------------------------------------------------------------!
+! - Insert New Octagons
+! Compute
+Ao = ws*ts-2*es**2
+Ac = pi*r_core**2
+beta_c = (Ac/Ao)**(1/2)
+wc = ws*beta_c
+tc = ts*beta_c
+ec = es*beta_c
+
+! alfa_n2 = (1+beta_c**2)/(1+1/cusc_ratio) ! Good Approx. with Nominal cusc_ratio
+alfa_n2 = (1+(1+cusc_ratio)*beta_c**2)/(1+cusc_ratio)
+alfa_n = alfa_n2**(1/2)
+wn = ws*alfa_n
+tn = ts*alfa_n
+en = es*alfa_n
+
+! Keypoints - Nb3Sn
+k,,ws/2-(wn/2-en),ts/2-(tn/2)
+k51 = _return
+k,,ws/2+(wn/2-en),ts/2-(tn/2)
+k52 = _return
+k,,ws/2+(wn/2),ts/2-(tn/2-en)
+k53 = _return
+k,,ws/2+(wn/2),ts/2+(tn/2-en)
+k54 = _return
+k,,ws/2+(wn/2-en),ts/2+(tn/2)
+k55 = _return
+k,,ws/2-(wn/2-en),ts/2+(tn/2)
+k56 = _return
+k,,ws/2-(wn/2),ts/2+(tn/2-en)
+k57 = _return
+k,,ws/2-(wn/2),ts/2-(tn/2-en)
+k58 = _return
+
+l,k51,k52
+l,k52,k53
+l,k53,k54
+l,k54,k55
+l,k55,k56
+l,k56,k57
+l,k57,k58
+l,k58,k51
+
+a,k51,k52,k53,k54,k55,k56,k57,k58
+a_scond = _return
+
+! Keypoints - Core
+k,,ws/2-(wc/2-ec),ts/2-(tc/2)
+k61 = _return
+k,,ws/2+(wc/2-ec),ts/2-(tc/2)
+k62 = _return
+k,,ws/2+(wc/2),ts/2-(tc/2-ec)
+k63 = _return
+k,,ws/2+(wc/2),ts/2+(tc/2-ec)
+k64 = _return
+k,,ws/2+(wc/2-ec),ts/2+(tc/2)
+k65 = _return
+k,,ws/2-(wc/2-ec),ts/2+(tc/2)
+k66 = _return
+k,,ws/2-(wc/2),ts/2+(tc/2-ec)
+k67 = _return
+k,,ws/2-(wc/2),ts/2-(tc/2-ec)
+k68 = _return
+
+l,k61,k62
+l,k62,k63
+l,k63,k64
+l,k64,k65
+l,k65,k66
+l,k66,k67
+l,k67,k68
+l,k68,k61
+
+a,k61,k62,k63,k64,k65,k66,k67,k68
+a_core = _return
+
+! Partition
+aplot
+boptn,keep,no
+aptn,all
+
+cm,all_tmp,area
+! --------------------------------------------------------------!
+! Labels
+
+! Core
+cmsel,s,all_tmp
+alls,below,area
+asel,r,loc,x,ws/2-wc/2,ws/2+wc/2
+asel,r,loc,y,ts/2-tc/2,ts/2+tc/2
+
+alls,below,area
+lsel,r,loc,x,ws/2-wc/2
+lsel,r,length, , ec
+asll,u
+alls,below,area
+lsel,r,loc,x,ws/2+wc/2
+lsel,r,length, , ec
+asll,u
+alls,below,area
+aatt,mat_cu
+cm,cu_core,area
+
+! Supercond.
+cmsel,s,all_tmp
+alls,below,area
+asel,r,loc,x,ws/2-wn/2,ws/2+wn/2
+asel,r,loc,y,ts/2-tn/2,ts/2+tn/2
+cmsel,u,cu_core
+alls,below,area
+
+lsel,r,loc,x,ws/2-wn/2,ws/2+wn/2
+lsel,r,loc,y,ts/2-tn/2,ts/2+tn/2
+asll,r,1
+
+aatt,mat_nb
+cm,nb_cond,area
+
+! Epoxy
+cmsel,s,all_tmp
+alls,below,area
+lsel,r,length,,es
+asll
+
+aatt,mat_res
+cm,epoxy,area
+
+! Cu Crown
+cmsel,s,all_tmp
+cmsel,u,epoxy
+cmsel,u,nb_cond
+cmsel,u,cu_core
+alls,below,area
+
+aatt,mat_cu
+cm,cu_crown,area
+
+! Common Label
+cmsel,s,nb_cond
+cmsel,a,cu_core
+cmsel,a,cu_crown
+alls,below,area
+cm,strand,area
+
+/pnum,mat,1
+/number,1
+aplot
+
+! --------------------------
+! Stack Vertically
+! Generate a couple
+cmsel,s,all_tmp
+alls,below,area
+AGEN, 2 , all, , , 0 , ts, 0, , 0, 0
+cm,all_tmp,area
+
+! - Stack Horizontally
+AGEN, Ns/2, all, , , ws, 0 , 0, , 0, 0
+cm,bare_cable,area
+
+! Move Cable in Easy Position
+cmsel,s,bare_cable
+alls,below,area
+
+csys,0
+AGEN, 2 , all, , , -w_cable/2, -t_cable/2, 0, , 0, 1
+
+! Redefine material with props
+asel,s,mat,,mat_nb
+cm,nb_cond,area
+
+asel,s,mat,,mat_cu
+asel,a,mat,,mat_nb
+cm,strand,area
+
+asel,s,mat,,mat_res
+cm,epoxy,area
+
+! Plot
+cmsel,s,bare_cable
+alls,below,area
+aplot
+! --------------------------------------------------------------!
+! - Reglue Fix
+asel,s,mat,,mat_cu
+aglue,all
+aatt,mat_cu
+cmsel,a,bare_cable
+cm,bare_cable,area
+
+asel,s,mat,,mat_res
+aglue,all
+aatt,mat_res
+cmsel,a,bare_cable
+cm,bare_cable,area
+
+asel,s,mat,,mat_cu
+asel,a,mat,,mat_res
+aglue,all
+
+asel,u,mat,,mat_res
+aatt,mat_cu
+
+asel,s,mat,,mat_cu
+asel,a,mat,,mat_nb
+asel,a,mat,,mat_res
+cm,bare_cable,area
+
+aplot

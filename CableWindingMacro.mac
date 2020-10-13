@@ -1,0 +1,107 @@
+! --------------------------------------------------------------------- !
+! Cable Winding Macro. Runs with:                                       !
+! CableWindingMacro,ri,ro,ang11,ang12,ang13,ang14,Nc,cable_name         !
+! Creates a coil block starting from a bare cable                       !
+! G. Vallone, 2020                                                      !
+! --------------------------------------------------------------------- !
+! Variables:
+! arg1 = ri              - inner radius
+! arg2 = ro              - outer radius
+! arg3 = ang11           - block angles 11/12/13/14 (counterclockwise)
+! arg4 = ang12
+! arg5 = ang13
+! arg6 = ang14
+! arg7 = Nc              - Number of cables
+! arg8 = bare cable name
+! arg9 = cable block name
+! arg10 = insulation block name
+! --------------------------------------------------------------------- !
+
+ri = arg1
+ro = arg2
+ang_a = arg3
+ang_b = arg4
+ang_c = arg5
+ang_d = arg6
+Nc = arg7
+cable_name = arg8
+cable_block = arg9
+ins_block = ar10
+
+! - Insulation
+cmsel,none
+csys,1
+k, , ri, ang_a
+k_a = _return
+k, , ro, ang_b
+k_b = _return
+k, , ro, ang_c
+k_c = _return
+k, , ri, ang_d
+k_d = _return
+
+l,k_b,k_c
+l,k_d,k_a
+csys,0
+l,k_a,k_b
+l,k_c,k_d
+
+a,k_a,k_b,k_c,k_d
+cm,ins_block,area
+aatt,mat_ins
+
+! - Cables
+alpha_i = (ang_d-ang_a)/Nc
+alpha_o = (ang_c-ang_b)/Nc
+
+! Compute alpha angles
+x_px = (ro*cos(ang_b)-ri*cos(ang_a))/2
+y_px = (ro*sin(ang_b)-ri*sin(ang_a))/2
+alpha_c0 = atan(y_px/x_px)
+
+x_px = (ro*cos(ang_c)-ri*cos(ang_d))/2
+y_px = (ro*sin(ang_c)-ri*sin(ang_d))/2
+alpha_c = (atan(y_px/x_px)-alpha_c0)/Nc
+
+x_px = (ro*cos(ang_b)-ri*cos(ang_a))/2+ri*cos(ang_a)
+y_px = (ro*sin(ang_b)-ri*sin(ang_a))/2+ri*sin(ang_a)
+alpha_p0 = atan(y_px/x_px)
+
+x_px = (ro*cos(ang_c)-ri*cos(ang_d))/2+ri*cos(ang_d)
+y_px = (ro*sin(ang_c)-ri*sin(ang_d))/2+ri*sin(ang_d)
+alpha_p = (atan(y_px/x_px)-alpha_p0)/Nc
+
+rc = (ri+ro)/2
+
+cmsel,none
+alls,below,area
+cm,cable_block,area
+
+*do,ii,1,Nc
+! *do,ii,1,1  ! 4Debug
+
+    cmsel,s,cable_name
+    alls,below,area
+
+    csys,1
+    AGEN, 2 , all, , , 0 , alpha_c*(ii-1/2)+alpha_c0, 0, , 0, 0
+    cmsel,u,cable_name
+
+    csys,0
+    AGEN, 2 , all, , , rc*cos(alpha_p*(ii-1/2)+alpha_p0), rc*sin(alpha_p*(ii-1/2)+alpha_p0), 0, , 0, 1
+
+    ! Names
+    cm,cable_tmp,area
+    cmsel,a,cable_block
+    cm,cable_block,area
+
+    ! Boolean
+    cmsel,s,cable_tmp
+    cmsel,a,ins_block
+    aplot
+    asba,ins_block,cable_tmp, , delete, keep
+    cmsel,u,cable_block
+    cm,ins_block,area
+    aatt,mat_ins
+
+*enddo
