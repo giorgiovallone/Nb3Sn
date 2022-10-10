@@ -1,0 +1,351 @@
+! --------------------------------------------------------
+! Script to define the csys in the ends
+! Assumes a swept structured mesh
+! --------------------------------------------------------
+! Coil macro, defines the correct ref. system in the ends
+! It works only if there are no double nodes - issue an
+! nummrg,nodes before if that is not the case
+! - Assumes a quadrupole
+! Modify ymax,gt criteria for other symmetries
+! --------------------------------------------------------
+! Call with:
+! *use,coil_end_esys_v3.mac,cname,csys0
+! cname is the target component (volume)
+! csys0 is the starting number for reference systems
+! --------------------------------------------------------
+! Directions - updated with v2:
+! x - width
+! y - thick
+! z - length
+! --------------------------------------------------------
+! Algorithm explained:
+! 1 Create a component to save the rotated elements (erts_block)
+! 2 Get the first corner element
+! 3 Get the first and second face in the z direction
+! 4 Using the swept element sides defines a reference sys
+! 5 get the second element / connected longitudinally
+! 6 loop until string is over
+! 7 loop over the block 
+! --------------------------------------------------------
+! visual options / useful to check
+! /number,0
+! /pnum,node,0
+! /pnum,mat,0
+! /psymb,csys,1
+! /psymb,esys,1
+! /vscale, , 3 	! vector scaling to see better the csys
+! --------------------------------------------------------
+! - Get Arguments
+cname = arg1
+csys0 = arg2
+! --------------------------------------------------------
+! Inizialize rotated elements - block
+esel,none
+cm,erts_block,elem
+
+! Get max kp number / use this numbers for csys definition
+alls
+*get,kmax,kp,,num,max
+k1 = kmax+1
+k2 = kmax+2
+k3 = kmax+3
+
+! Initialize csys number
+icsys = csys0
+
+! Use connectivity - previous row decides direction
+
+! ----- Loop around the selected block
+break_check_block = 1
+*dowhile,break_check_block
+! *do,test_block,1,2
+
+! re-initialize string elements
+esel,none
+cm,erts,elem
+
+cmsel,s,%cname%
+alls,below,volu
+cmsel,u,erts_block
+
+nsle,s,corner
+csys,1
+*get,zmin,node,,mnloc,z 	! This is necessary only for the first group
+nsel,r,loc,z,zmin
+
+! Select the first element
+csys,1
+
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+esln,r
+nsle,s,corner
+nsel,r,loc,z,zmin
+cm,nface1,node
+nsle,s,corner
+cmsel,u,nface1
+cm,nface2,node
+
+! Specify the local system
+*get,iel,elem,,num,min
+
+csys,0
+*get,xcen,elem,iel,cent,x
+*get,ycen,elem,iel,cent,y
+*get,zcen,elem,iel,cent,z
+local,icsys,0,xcen,ycen,zcen,atan(ycen/xcen)
+
+csys,icsys 	! Already rotated to get the correct r/theta
+
+! Get the face centroid direction
+cmsel,s,nface1
+xavg1 = 0
+yavg1 = 0
+zavg1 = 0
+inode = 0
+*do,ii,1,4
+	*get,inode,node,inode,nxth
+	*get,xnode,node,inode,loc,x
+	*get,ynode,node,inode,loc,y
+	*get,znode,node,inode,loc,z
+	xavg1 = xavg1 + xnode
+	yavg1 = yavg1 + ynode
+	zavg1 = zavg1 + znode
+*enddo
+xavg1 = xavg1/4
+yavg1 = yavg1/4
+zavg1 = zavg1/4
+
+cmsel,s,nface2
+xavg2 = 0
+yavg2 = 0
+zavg2 = 0
+inode = 0
+*do,ii,1,4
+	*get,inode,node,inode,nxth
+	*get,xnode,node,inode,loc,x
+	*get,ynode,node,inode,loc,y
+	*get,znode,node,inode,loc,z
+	xavg2 = xavg2 + xnode
+	yavg2 = yavg2 + ynode
+	zavg2 = zavg2 + znode
+*enddo
+xavg2 = xavg2/4
+yavg2 = yavg2/4
+zavg2 = zavg2/4
+
+! Vector
+dx = xavg2 - xavg1
+dy = yavg2 - yavg1
+dz = zavg2 - zavg1
+
+! ------------------------------------------
+! Get the csys from 3 edge nodes
+csys,icsys
+cmsel,s,nface1
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin,xavg1
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+*get,n0,node,,num,min
+*get,x_n0,node,n0,loc,x
+*get,y_n0,node,n0,loc,y
+*get,z_n0,node,n0,loc,z
+
+cmsel,s,nface1
+nsel,u,node,,n0
+*get,xmax,node,,mxloc,x
+nsel,r,loc,x,xavg1,xmax
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+*get,nx,node,,num,min
+*get,x_nx,node,nx,loc,x
+*get,y_nx,node,nx,loc,y
+*get,z_nx,node,nx,loc,z
+
+cmsel,s,nface1
+nsel,u,node,,n0
+nsel,u,node,,nx
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin,xavg1
+*get,ny,node,,num,min
+*get,x_ny,node,ny,loc,x
+*get,y_ny,node,ny,loc,y
+*get,z_ny,node,ny,loc,z
+
+csys,icsys
+k,k1,x_n0,y_n0,z_n0 					! Origin
+k,k2,x_nx,y_nx,z_nx 					! x-axis - Is the actual z / rotate after
+k,k3,x_ny,y_ny,z_ny 					! Pxy plane
+
+cskp,icsys,0,k1,k2,k3 					! Has k1-k2 as x-axis
+clocal,icsys+1,  0,0,0,0, 0, 0, 0 		! Store unrotated / useful to select
+emodif,iel,esys,icsys
+
+! ------------------------------------------
+! Update saved elements
+cmsel,s,erts
+esel,a,elem,,iel
+cm,erts,elem
+
+! ------------------------------------------
+! - Cycle
+break_check = 1
+*dowhile,break_check
+
+! *do,test,1,3
+! - Get next element
+
+! Get inner corner node
+csys,1
+cmsel,s,nface2
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+
+esln,s
+esel,u,elem,,iel
+cmsel,u,erts_block
+
+! Get new iel
+*get,iel,elem,,num,min
+
+! - GET FACES / nface1 is the old nface2
+cmsel,s,nface2
+cm,nface1,node
+ 
+nsle,s,corner
+cmsel,u,nface1
+cm,nface2,node
+
+! Specify the local system / start from 101 and then rotate
+csys,icsys+1 	! Already rotated to get the correct r/theta
+
+! Get the face centroid direction
+cmsel,s,nface1
+xavg1 = 0
+yavg1 = 0
+zavg1 = 0
+inode = 0
+*do,ii,1,4
+	*get,inode,node,inode,nxth
+	*get,xnode,node,inode,loc,x
+	*get,ynode,node,inode,loc,y
+	*get,znode,node,inode,loc,z
+	xavg1 = xavg1 + xnode
+	yavg1 = yavg1 + ynode
+	zavg1 = zavg1 + znode
+*enddo
+xavg1 = xavg1/4
+yavg1 = yavg1/4
+zavg1 = zavg1/4
+
+cmsel,s,nface2
+xavg2 = 0
+yavg2 = 0
+zavg2 = 0
+inode = 0
+*do,ii,1,4
+	*get,inode,node,inode,nxth
+	*get,xnode,node,inode,loc,x
+	*get,ynode,node,inode,loc,y
+	*get,znode,node,inode,loc,z
+	xavg2 = xavg2 + xnode
+	yavg2 = yavg2 + ynode
+	zavg2 = zavg2 + znode
+*enddo
+xavg2 = xavg2/4
+yavg2 = yavg2/4
+zavg2 = zavg2/4
+
+! Vector
+dx = xavg2 - xavg1
+dy = yavg2 - yavg1
+dz = zavg2 - zavg1
+
+! ------------------------------------------
+! Get the csys from 3 edge nodes
+cmsel,s,nface1
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin,xavg1
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+*get,n0,node,,num,min
+*get,x_n0,node,n0,loc,x
+*get,y_n0,node,n0,loc,y
+*get,z_n0,node,n0,loc,z
+
+cmsel,s,nface1
+nsel,u,node,,n0
+*get,xmax,node,,mxloc,x
+nsel,r,loc,x,xavg1,xmax
+*get,ymin,node,,mnloc,y
+nsel,r,loc,y,ymin
+*get,nx,node,,num,min
+*get,x_nx,node,nx,loc,x
+*get,y_nx,node,nx,loc,y
+*get,z_nx,node,nx,loc,z
+
+cmsel,s,nface1
+nsel,u,node,,n0
+nsel,u,node,,nx
+*get,xmin,node,,mnloc,x
+nsel,r,loc,x,xmin,xavg1
+*get,ny,node,,num,min
+*get,x_ny,node,ny,loc,x
+*get,y_ny,node,ny,loc,y
+*get,z_ny,node,ny,loc,z
+
+k,k1,x_n0,y_n0,z_n0 					! Origin
+k,k2,x_nx,y_nx,z_nx 					! x-axis - Is the actual z / rotate after
+k,k3,x_ny,y_ny,z_ny 					! Pxy plane
+
+icsys = icsys + 1
+cskp,icsys,0,k1,k2,k3 					! Has k1-k2 as x-axis
+clocal,icsys+1,  0,0,0,0, 0, 0, 0 		! Store unrotated / useful to select
+emodif,iel,esys,icsys
+
+! ------------------------------------------
+! Update saved elements
+cmsel,s,erts
+esel,a,elem,,iel
+cm,erts,elem
+
+! Break if reached 45
+nsle,s,corner
+csys,1
+*get,ymax,node,,mxloc,y
+
+
+*if,ymax,gt,45-1e-2,then
+	break_check = 0
+*endif
+! ------------------------------------------
+
+*enddo 	! One element string
+
+! Update saved elements / block
+cmsel,s,erts
+cmsel,a,erts_block
+cm,erts_block,elem
+
+! Update Break / Coil Block
+alls,below,volu
+cmsel,u,erts_block
+*get,ecount,elem,,count
+*if,ecount,eq,0,then
+	break_check_block = 0
+*endif
+
+! Increase csys counter
+icsys = icsys + 1
+
+*enddo 	! Coil block
+
+! ------------------------------------------
+cmsel,s,erts_block
+nsle,s
+eplot
