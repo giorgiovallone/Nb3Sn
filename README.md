@@ -2,7 +2,9 @@
 ## Introduction
 This repository contains ANSYS macros and MATLAB macro/scripts/functions, aimed at the creation of numerical models at the 'strand level' of superconducting magnets based on Rutherfurd cables with Nb<sub>3</sub>Sn strands.
 
-More files will be added soon.
+## ChangeLog
+Update 10/10/2022:
+Added coil esys macro.
 
 ## Content
 ### BareCableMacro_v2.mac
@@ -13,6 +15,15 @@ An ANSYS macro that, starting from a bare cable, creates a 'coil block' in a cos
 
 ### strain_function_cable_z.m
 A MATLAB function to compute the exponential strain function [3] on superconducting Nb<sub>3</sub>Sn elements, starting from the strain tensor.
+
+### coil_end_esys_v3.mac
+
+APDL macro, defines the correct ref. system in the ends. Assumes a swept structured mesh. It works only if there are no double nodes - issue an nummrg,nodes before if that is not the case. The script is written for a cos(theta) quadrupole, modifications for other designs should be easy.
+Call with:
+*use,coil_end_esys_v3.mac,cname,csys0
+where:
+cname is the target component (volume)
+csys0 is the starting number for reference systems
 
 ## References
 [1] G. Vallone, B. Bordini, and P. Ferracin, “Computation of the reversible critical current degradation in Nb<sub>3</sub>Sn Rutherford cables for particle accelerator magnets”, IEEE Transactions on Applied Superconductivity, 2018.
