@@ -25,6 +25,10 @@ where:
 cname is the target component (volume)
 csys0 is the starting number for reference systems
 
+### OrthoCoil_v1.inp
+
+APDL input code example showing how to implement anisotropic material properties from [4] and calling the coil_end_esys macro.
+
 ## References
 [1] G. Vallone, B. Bordini, and P. Ferracin, “Computation of the reversible critical current degradation in Nb<sub>3</sub>Sn Rutherford cables for particle accelerator magnets”, IEEE Transactions on Applied Superconductivity, 2018.
 
