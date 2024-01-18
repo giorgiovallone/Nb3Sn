@@ -1,0 +1,39 @@
+! ------------------------------------------------------
+! - 3D Coil Code
+! ------------------------------------------------------
+! Material Properties
+! ------------------------------------------------------
+mat_coil = 1
+mpdele,all,mat_coil
+mat_nb = mat_coil
+*set,mat_nb,1
+mptemp,1,4.3,293
+mpdata,ex,  mat_nb,1,ex_gc,ey_gw
+mpdata,ey,  mat_nb,1,ey_gc,ey_gw
+mpdata,ez,  mat_nb,1,ez_gc,ez_gw
+mpdata,gxy, mat_nb,1,gxy_gc,gxy_gw
+mpdata,gyz, mat_nb,1,gyz_gc,gyz_gw
+mpdata,gxz, mat_nb,1,gxz_gc,gxz_gw
+mpdata,prxy,mat_nb,1,nuxy_g,nuxy_g
+mpdata,pryz,mat_nb,1,nuyz_g,nuyz_g
+mpdata,prxz,mat_nb,1,nuxz_g,nuxz_g
+mp,    alpx,mat_nb,ax_g/(293-4.5)
+mp,    alpy,mat_nb,ay_g/(293-4.5)
+mp,    alpz,mat_nb,az_g/(293-4.5)
+
+! Define Generalized Hill data table  
+TB,ANISO,mat_nb
+TBDATA,1,Yx_gc,Yy_gc,Yz_gc,ex_tg_gc,ey_tg_gc,ez_tg_gc
+TBDATA,7,Yx_gc,Yy_gc,Yz_gc,ex_tg_gc,ey_tg_gc,ez_tg_gc
+TBDATA,13,Yxy_gc,Yyz_gc,Yxz_gc,gxy_tg_gc,gyz_tg_gc,gxz_tg_gc
+! ------------------------------------------------------
+! Coil Ends
+! ------------------------------------------------------
+csys0 = 1001
+
+! Use this code for each coil block
+cmsel,s,coil_block_i
+alls,below,volu
+nummrg,node,1e-6
+*use,coil_end_esys_v3.mac,'coil_block_i',csys0
+csys0 = csys0 + icsys
