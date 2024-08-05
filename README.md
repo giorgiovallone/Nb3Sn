@@ -3,6 +3,9 @@
 This repository contains ANSYS macros and MATLAB macro/scripts/functions, aimed at the creation of numerical models at the 'strand level' of superconducting magnets based on Rutherfurd cables with Nb<sub>3</sub>Sn strands.
 
 ## ChangeLog
+Update 08/05/2024:
+Added Nb3Sn_CoilMat.inp - full 3D coil material properties using generalized Hill model. For more details see [4]
+
 Update 10/10/2022:
 Added coil esys macro.
 
@@ -36,4 +39,4 @@ APDL input code example showing how to implement anisotropic material properties
 
 [3] B. Bordini, P. Alknes, L. Bottura, L. Rossi, D. Valentinis, “An exponential scaling law for the strain dependence of the Nb<sub>3</sub>Sn critical current density,” Superconductor Science and Technology, 2013.
 
-[4] G. Vallone, E. Anderssen, B. Bordini, P. Ferracin, "A Review of the Mechanical Properties of Materials Used in Nb<sub>3</sub>Sn Magnets for Particle Accelerators", IEEE Transactions on Applied Superconductivity, 2023.
+[4] G. Vallone, E. Anderssen, B. Bordini and P. Ferracin, "A Review of the Mechanical Properties of Materials Used in Nb3Sn Magnets for Particle Accelerators," in IEEE Transactions on Applied Superconductivity, vol. 33, no. 5, pp. 1-6, Aug. 2023, Art no. 4002806, doi: 10.1109/TASC.2023.3248544
