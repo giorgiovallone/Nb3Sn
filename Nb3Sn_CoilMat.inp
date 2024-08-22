@@ -1,30 +1,36 @@
 ! ===============================================================
 ! - Coil Region - Generalized Hill
-! Elasticity - Warm
-ex_gw   = 81.1e9       ! Pa
-ey_gw   = 54.3e9
-ez_gw   = 103.1e9
-gxy_gw  = 25.1e9
-gyz_gw  = 24.0e9
-gzx_gw  = 31.4e9
-nuxy_g  = 0.29
-nuxz_g  = 0.20
-nuyz_g  = 0.25
+! Elasticity - Warm // Update
+ex_gw   = 52.6e9       ! Pa
+ey_gw   = 37.4e9
+ez_gw   = 66.1e9
+gxy_gw  = 18.8e9
+gyz_gw  = 19.8e9
+gzx_gw  = 22.9e9
+nuxy_g  = 0.19
+nuxz_g  = 0.17
+nuyz_g  = 0.23
 
 ! Elasticity - Cold
-ex_gc   = 80.3e9       ! Pa
-ey_gc   = 62.3e9
-ez_gc   = 100.8e9
-gxy_gc  = 25.7e9
-gyz_gc  = 26.3e9
-gzx_gc  = 33.1e9
+ex_gc   = 48.0e9       ! Pa
+ey_gc   = 40.2e9
+ez_gc   = 77.2e9
+gxy_gc  = 17.7e9
+gyz_gc  = 22.5e9
+gzx_gc  = 24.1e9
 
 ! Thermal Contraction
 ax_g = 3.65e-3
-ay_g = 4.07e-3
+ay_g = 4.03e-3
 az_g = 2.33e-3
 
 ! Plasticity - Cold / ONLY ONE TEMPERATURE ALLOWED
+! Yx_gc = 44e6
+! Yy_gc = 44e6
+! Yz_gc = 44e6
+! Yxy_gc = 28e6
+! Yxz_gc = 28e6
+! Yyz_gc = 28e6
 Yx_gc = 30e6
 Yy_gc = 30e6
 Yz_gc = 30e6
@@ -32,35 +38,36 @@ Yxy_gc = 15e6
 Yxz_gc = 15e6
 Yyz_gc = 15e6
 
-ex_tg_gc        = 25e9
-ey_tg_gc        = 23e9
-ez_tg_gc        = 50e9
+ex_tg_gc        = 30e9
+ey_tg_gc        = 26.1e9
+ez_tg_gc        = 52.5e9    ! Average warm/cold
 gxy_tg_gc       = 5.7e9
 gyz_tg_gc       = 5.7e9
 gxz_tg_gc       = 7.5e9
-! -----------------------------------------------------------
+
+! ------------------------------------------------------
 mat_coil = 1
 mpdele,all,mat_coil
-mat_coil = mat_coil
-*set,mat_coil,1
+mat_nb = mat_coil
+*set,mat_nb,1
 mptemp,1,4.3,293
-mpdata,ex,  mat_coil,1,ex_gc,ey_gw
-mpdata,ey,  mat_coil,1,ey_gc,ey_gw
-mpdata,ez,  mat_coil,1,ez_gc,ez_gw
-mpdata,gxy, mat_coil,1,gxy_gc,gxy_gw
-mpdata,gyz, mat_coil,1,gyz_gc,gyz_gw
-mpdata,gxz, mat_coil,1,gzx_gc,gzx_gw
-mpdata,prxy,mat_coil,1,nuxy_g,nuxy_g
-mpdata,pryz,mat_coil,1,nuyz_g,nuyz_g
-mpdata,prxz,mat_coil,1,nuxz_g,nuxz_g
-mp,    alpx,mat_coil,ax_g/(293-4.5)
-mp,    alpy,mat_coil,ay_g/(293-4.5)
-mp,    alpz,mat_coil,az_g/(293-4.5)
+mpdata,ex,  mat_nb,1,ex_gc,ey_gw
+mpdata,ey,  mat_nb,1,ey_gc,ey_gw
+mpdata,ez,  mat_nb,1,ez_gc,ez_gw
+mpdata,gxy, mat_nb,1,gxy_gc,gxy_gw
+mpdata,gyz, mat_nb,1,gyz_gc,gyz_gw
+mpdata,gxz, mat_nb,1,gzx_gc,gzx_gw
+mpdata,prxy,mat_nb,1,nuxy_g,nuxy_g
+mpdata,pryz,mat_nb,1,nuyz_g,nuyz_g
+mpdata,prxz,mat_nb,1,nuxz_g,nuxz_g
+mp,    alpx,mat_nb,ax_g/(293-4.5)
+mp,    alpy,mat_nb,ay_g/(293-4.5)
+mp,    alpz,mat_nb,az_g/(293-4.5)
 
 ! Define Generalized Hill data table  
-TB,ANISO,mat_coil
+TB,ANISO,mat_nb
 TBDATA,1,Yx_gc,Yy_gc,Yz_gc,ex_tg_gc,ey_tg_gc,ez_tg_gc
 TBDATA,7,Yx_gc,Yy_gc,Yz_gc,ex_tg_gc,ey_tg_gc,ez_tg_gc
 TBDATA,13,Yxy_gc,Yyz_gc,Yxz_gc,gxy_tg_gc,gyz_tg_gc,gxz_tg_gc
-! -----------------------------------------------------------
+! ------------------------------------------------------
 ! ===============================================================
